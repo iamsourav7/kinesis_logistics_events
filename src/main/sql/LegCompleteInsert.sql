@@ -1,0 +1,54 @@
+INSERT INTO [MTDATA_KINESIS].[dbo].CW_Leg_Complete
+(
+     fleet_id
+    ,vehicle_id
+    ,driver_id
+    ,gps_time
+    ,latitude
+    ,longitude
+    ,dispatch_id
+    ,job_reference
+    ,job_reference_type
+    ,leg_version
+    ,leg_id
+    ,leg_type
+    ,leg_status
+    ,leg_number
+    ,leg_title
+    ,leg_customer_group_id
+    ,leg_customer_group_version
+    ,leg_customer_id
+    ,leg_location_name
+    ,leg_address
+    ,leg_latitude
+    ,leg_longitude
+    ,leg_radius
+    ,sequence_id
+)
+VALUES
+(
+       ?
+      ,?
+      ,?
+      ,?
+      ,?
+      ,?
+      ,?
+      ,?
+      ,?
+      ,?
+      ,?
+      ,?
+      ,?
+      ,?
+      ,?
+      ,?
+      ,?
+      ,?
+      ,?
+      ,?
+      ,?
+      ,?
+      ,?
+      ,?
+)

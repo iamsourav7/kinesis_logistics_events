@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- System -->
+
+    <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook"/>
+    <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" /> <!--TODO Comment out for production -->
+
+    <property name="defaultPattern" value="[%date] [%highlight(%-5level)] [%class{50}.%method:%line] %msg%rootException%n" />
+
+    <appender name="FILE"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>target/slf4j/roll-by-time-and-size/app.log</file>
+        <rollingPolicy
+                class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>
+                target/slf4j/roll-by-time-and-size/app.%d{yyyy-MM-dd}.%i.log.zip
+            </fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <!-- Number of days of log files to keep -->
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>500MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %p %m%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${defaultPattern}</pattern>
+        </encoder>
+    </appender>
+
+    <root level="info"> <!--TODO Change to debug or info for production -->
+        <!--appender-ref ref="ASYNC"/-->
+        <appender-ref ref="STDOUT"/> <!--TODO Comment out for production -->
+        <appender-ref ref="FILE"/> <!--TODO Comment out for production -->
+    </root>
+
+</configuration>

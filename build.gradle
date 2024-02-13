@@ -1,0 +1,90 @@
+plugins {
+	id 'org.springframework.boot' version '2.6.4'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'java'
+	id 'idea'
+}
+
+group = 'au.com.camerons'
+version = '1.7-RELEASE'
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
+
+repositories {
+	mavenCentral()
+}
+
+
+allprojects {
+	apply plugin: 'java'
+
+	tasks.withType(Copy).configureEach {
+		duplicatesStrategy DuplicatesStrategy.WARN
+	}
+
+	gradle.projectsEvaluated {
+		tasks.withType(JavaCompile).tap {
+			configureEach {
+				options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+			}
+		}
+	}
+}
+
+
+jar {
+	manifest {
+		attributes 'Main-Class': 'au.com.camerons.mtdata.kinesis.logistics.EventProcessor'
+	}
+
+	tasks.withType(Copy).configureEach {
+		duplicatesStrategy DuplicatesStrategy.WARN
+	}
+}
+
+bootJar {
+	tasks.configureEach {
+		duplicatesStrategy DuplicatesStrategy.EXCLUDE
+	}
+
+	exclude('application.properties')
+}
+
+dependencies {
+
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
+
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.2.0'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.2.0'
+
+	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-test
+	testImplementation 'org.springframework.boot:spring-boot-test:1.4.0.RELEASE'
+
+
+	// https://mvnrepository.com/artifact/com.mashape.unirest/unirest-java
+//	implementation 'com.mashape.unirest:unirest-java:1.3.1'
+	implementation 'com.konghq:unirest-java:3.12.0'
+
+
+
+	// https://mvnrepository.com/artifact/org.apache.commons/commons-dbcp2
+	implementation group: 'org.apache.commons', name: 'commons-dbcp2', version: '2.9.0'
+
+	// https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+	implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
+
+	// compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.15.2'
+	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.15.2'
+	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.15.2'
+
+	implementation 'com.google.code.gson:gson:2.10.1'
+	implementation 'joda-time:joda-time:2.12.5'
+	implementation 'com.microsoft.sqlserver:mssql-jdbc:12.2.0.jre11'
+	testImplementation 'junit:junit:4.13.1'
+
+}
+
+test {
+	useJUnitPlatform()
+}

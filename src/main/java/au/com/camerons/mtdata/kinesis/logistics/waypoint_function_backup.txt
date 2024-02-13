@@ -1,0 +1,301 @@
+						// Process Arrive Waypoint Report (no Job Data in this Report)
+						if (report_id.compareTo("208") == 0) {
+							log.info("Waypoint Arrive");
+
+							String legCompleteInsertSql =
+									"INSERT INTO [MTDATA_KINESIS].[dbo].events_waypoint_arrive" +
+											"(" +
+											"     report_id" +
+											"    ,fleet_id" +
+											"    ,fleet_name" +
+											"    ,vehicle_id" +
+											"    ,vehicle_name" +
+											"    ,vehicle_external_reference" +
+											"    ,driver_id" +
+											"    ,driver_name" +
+											"    ,driver_external_reference" +
+											"    ,gps_time" +
+											"    ,device_time" +
+											"    ,latitude" +
+											"    ,longitude" +
+											"    ,speed_accumulator" +
+											"    ,direction" +
+											"    ,speed" +
+											"    ,maximum_speed" +
+											"    ,place_name" +
+											"    ,map_reference" +
+											"    ,hdop" +
+											"    ,num_satellites_in_view" +
+											"    ,altitude" +
+											"    ,odometer" +
+											"    ,total_fuel" +
+											"    ,device_serial_number" +
+											"    ,device_id" +
+											"    ,address_number" +
+											"    ,address_street_name" +
+											"    ,address_suburb" +
+											"    ,address_city" +
+											"    ,address_state" +
+											"    ,address_postal_code" +
+											"    ,address_country" +
+											"    ,address_timezone_offset" +
+											"    ,sequence_id" +
+											")" +
+											"VALUES" +
+											"(" +
+											"       ?" +            // report_id
+											"      ,?" +            // fleet_id
+											"      ,?" +            // fleet_name
+											"      ,?" +            // vehicle_id
+											"      ,?" +            // vehicle_name
+											"      ,?" +            // vehicle_external_reference
+											"      ,?" +            // driver_id
+											"      ,?" +            // driver_name
+											"      ,?" +            // driver_external_reference
+											"      ,?" +            // gps_time
+											"      ,?" +            // device_time
+											"      ,?" +            // latitude
+											"      ,?" +            // longitude
+											"      ,?" +            // speed accumulation
+											"      ,?" +            // direction
+											"      ,?" +            // speed
+											"      ,?" +            // maximum_speed
+											"      ,?" +            // place_name
+											"      ,?" +            // map_reference
+											"      ,?" +            // hdop
+											"      ,?" +            // num_sattelites_in_view
+											"      ,?" +            // altitude
+											"      ,?" +            // odometer
+											"      ,?" +            // total_fuel
+											"      ,?" +            // device_serial_number
+											"      ,?" +            // device_id
+											"      ,?" +            // address_number
+											"      ,?" +            // address_street_name
+											"      ,?" +            // address_suburb
+											"      ,?" +            // address_city
+											"      ,?" +            // address_state
+											"      ,?" +            // address_postal_code
+											"      ,?" +            // address_country
+											"      ,?" +            // address_timezone_offset
+											"      ,?" +            // sequence_id"
+											") ";
+
+							try (
+									PreparedStatement prepsInsertRecord = connection.prepareStatement(legCompleteInsertSql);
+							) {
+
+								prepsInsertRecord.setInt(1, tryParseInt(report_id, 0));
+								prepsInsertRecord.setInt(2, tryParseInt(fleet_id, 0));
+								prepsInsertRecord.setString(3, fleet_name);
+								prepsInsertRecord.setInt(4, tryParseInt(vehicle_id, 0));
+								prepsInsertRecord.setString(5, vehicle_external_reference);
+								prepsInsertRecord.setString(6, vehicle_name);
+								prepsInsertRecord.setInt(7, tryParseInt(driver_id, 0));
+								prepsInsertRecord.setString(8, driver_name);
+								prepsInsertRecord.setString(9, driver_external_reference);
+								prepsInsertRecord.setTimestamp(10, new Timestamp(tryParseDate(gps_time, defaultDate).getTime()));
+								prepsInsertRecord.setTimestamp(11, new Timestamp(tryParseDate(device_time, defaultDate).getTime()));
+								prepsInsertRecord.setFloat(12, Float.parseFloat(latitude));
+								prepsInsertRecord.setFloat(13, Float.parseFloat(longitude));
+								prepsInsertRecord.setInt(14, tryParseInt(speed_accumulator, 0));
+								prepsInsertRecord.setInt(15, tryParseInt(direction, 0));
+								prepsInsertRecord.setFloat(16, Float.parseFloat(speed));
+								prepsInsertRecord.setFloat(17, Float.parseFloat(maximum_speed));
+								prepsInsertRecord.setString(18, place_name);
+								prepsInsertRecord.setString(19, map_reference);
+								prepsInsertRecord.setFloat(20, Float.parseFloat(hdop));
+								prepsInsertRecord.setInt(21, tryParseInt(num_satellites_in_view, 0));
+								prepsInsertRecord.setInt(22, tryParseInt(altitude, 0));
+								prepsInsertRecord.setInt(23, tryParseInt(odometer, 0));
+								prepsInsertRecord.setFloat(24, Float.parseFloat(total_fuel));
+								prepsInsertRecord.setString(25, device_serial_number);
+								prepsInsertRecord.setString(26, device_id);
+								prepsInsertRecord.setString(27, address_number);
+								prepsInsertRecord.setString(28, address_street_name);
+								prepsInsertRecord.setString(29, address_suburb);
+								prepsInsertRecord.setString(30, address_city);
+								prepsInsertRecord.setString(31, address_state);
+								prepsInsertRecord.setString(32, address_postal_code);
+								prepsInsertRecord.setString(33, address_country);
+								prepsInsertRecord.setString(34, address_timezone_offset);
+								prepsInsertRecord.setBigDecimal(35, new BigDecimal(eventSequence));
+								prepsInsertRecord.execute();
+
+
+							}
+							// Handle any errors that may have occurred.
+							catch (SQLIntegrityConstraintViolationException sicve) {
+								// If record already exists then attempt to update it
+								// This should generally not happen but due to the way the API allows us to select
+								// based on LastUpdateDateUTC there is a lack of precision which forces our searches to potentially
+								// cross over by 1 second and therefore may pickup a
+								log.info("Upsert needed");
+							} catch (SQLServerException sqle) {
+								// Key Constraint errors ignored
+								// These are caused by records being reread from a shard that have already
+								// been committed to the database
+								//if(sqle.getSQLState().compareTo("23000") != 0)
+								//{
+								sqle.printStackTrace();
+								log.error(sqle.getMessage());
+								log.error(sqle.getSQLState());
+								//}
+
+							} catch (Exception e) {
+								e.printStackTrace();
+
+							}
+
+							continueProcessing = false;
+						}
+
+						// Process Arrive Waypoint Report (no Job Data in this Report)
+						if (report_id.compareTo("226") == 0) {
+							log.info("Waypoint Depart");
+
+							String legCompleteInsertSql =
+									"INSERT INTO [MTDATA_KINESIS].[dbo].events_waypoint_depart" +
+											"(" +
+											"     report_id" +
+											"    ,fleet_id" +
+											"    ,fleet_name" +
+											"    ,vehicle_id" +
+											"    ,vehicle_name" +
+											"    ,vehicle_external_reference" +
+											"    ,driver_id" +
+											"    ,driver_name" +
+											"    ,driver_external_reference" +
+											"    ,gps_time" +
+											"    ,device_time" +
+											"    ,latitude" +
+											"    ,longitude" +
+											"    ,speed_accumulator" +
+											"    ,direction" +
+											"    ,speed" +
+											"    ,maximum_speed" +
+											"    ,place_name" +
+											"    ,map_reference" +
+											"    ,hdop" +
+											"    ,num_satellites_in_view" +
+											"    ,altitude" +
+											"    ,odometer" +
+											"    ,total_fuel" +
+											"    ,device_serial_number" +
+											"    ,device_id" +
+											"    ,address_number" +
+											"    ,address_street_name" +
+											"    ,address_suburb" +
+											"    ,address_city" +
+											"    ,address_state" +
+											"    ,address_postal_code" +
+											"    ,address_country" +
+											"    ,address_timezone_offset" +
+											"    ,sequence_id" +
+											")" +
+											"VALUES" +
+											"(" +
+											"       ?" +            // report_id
+											"      ,?" +            // fleet_id
+											"      ,?" +            // fleet_name
+											"      ,?" +            // vehicle_id
+											"      ,?" +            // vehicle_name
+											"      ,?" +            // vehicle_external_reference
+											"      ,?" +            // driver_id
+											"      ,?" +            // driver_name
+											"      ,?" +            // driver_external_reference
+											"      ,?" +            // gps_time
+											"      ,?" +            // device_time
+											"      ,?" +            // latitude
+											"      ,?" +            // longitude
+											"      ,?" +            // speed accumulation
+											"      ,?" +            // direction
+											"      ,?" +            // speed
+											"      ,?" +            // maximum_speed
+											"      ,?" +            // place_name
+											"      ,?" +            // map_reference
+											"      ,?" +            // hdop
+											"      ,?" +            // num_sattelites_in_view
+											"      ,?" +            // altitude
+											"      ,?" +            // odometer
+											"      ,?" +            // total_fuel
+											"      ,?" +            // device_serial_number
+											"      ,?" +            // device_id
+											"      ,?" +            // address_number
+											"      ,?" +            // address_street_name
+											"      ,?" +            // address_suburb
+											"      ,?" +            // address_city
+											"      ,?" +            // address_state
+											"      ,?" +            // address_postal_code
+											"      ,?" +            // address_country
+											"      ,?" +            // address_timezone_offset
+											"      ,?" +            // sequence_id"
+											") ";
+
+							try (
+									PreparedStatement prepsInsertRecord = connection.prepareStatement(legCompleteInsertSql);
+							) {
+
+								prepsInsertRecord.setInt(1, tryParseInt(report_id, 0));
+								prepsInsertRecord.setInt(2, tryParseInt(fleet_id, 0));
+								prepsInsertRecord.setString(3, fleet_name);
+								prepsInsertRecord.setInt(4, tryParseInt(vehicle_id, 0));
+								prepsInsertRecord.setString(5, vehicle_external_reference);
+								prepsInsertRecord.setString(6, vehicle_name);
+								prepsInsertRecord.setInt(7, tryParseInt(driver_id, 0));
+								prepsInsertRecord.setString(8, driver_name);
+								prepsInsertRecord.setString(9, driver_external_reference);
+								prepsInsertRecord.setTimestamp(10, new Timestamp(tryParseDate(gps_time, defaultDate).getTime()));
+								prepsInsertRecord.setTimestamp(11, new Timestamp(tryParseDate(device_time, defaultDate).getTime()));
+								prepsInsertRecord.setFloat(12, Float.parseFloat(latitude));
+								prepsInsertRecord.setFloat(13, Float.parseFloat(longitude));
+								prepsInsertRecord.setInt(14, tryParseInt(speed_accumulator, 0));
+								prepsInsertRecord.setInt(15, tryParseInt(direction, 0));
+								prepsInsertRecord.setFloat(16, Float.parseFloat(speed));
+								prepsInsertRecord.setFloat(17, Float.parseFloat(maximum_speed));
+								prepsInsertRecord.setString(18, place_name);
+								prepsInsertRecord.setString(19, map_reference);
+								prepsInsertRecord.setFloat(20, Float.parseFloat(hdop));
+								prepsInsertRecord.setInt(21, tryParseInt(num_satellites_in_view, 0));
+								prepsInsertRecord.setInt(22, tryParseInt(altitude, 0));
+								prepsInsertRecord.setInt(23, tryParseInt(odometer, 0));
+								prepsInsertRecord.setFloat(24, Float.parseFloat(total_fuel));
+								prepsInsertRecord.setString(25, device_serial_number);
+								prepsInsertRecord.setString(26, device_id);
+								prepsInsertRecord.setString(27, address_number);
+								prepsInsertRecord.setString(28, address_street_name);
+								prepsInsertRecord.setString(29, address_suburb);
+								prepsInsertRecord.setString(30, address_city);
+								prepsInsertRecord.setString(31, address_state);
+								prepsInsertRecord.setString(32, address_postal_code);
+								prepsInsertRecord.setString(33, address_country);
+								prepsInsertRecord.setString(34, address_timezone_offset);
+								prepsInsertRecord.setBigDecimal(35, new BigDecimal(eventSequence));
+								prepsInsertRecord.execute();
+
+
+							}
+							// Handle any errors that may have occurred.
+							catch (SQLIntegrityConstraintViolationException sicve) {
+								// If record already exists then attempt to update it
+								// This should generally not happen but due to the way the API allows us to select
+								// based on LastUpdateDateUTC there is a lack of precision which forces our searches to potentially
+								// cross over by 1 second and therefore may pickup a
+								log.info("Upsert needed");
+							} catch (SQLServerException sqle) {
+								// Key Constraint errors ignored
+								// These are caused by records being reread from a shard that have already
+								// been committed to the database
+								//if(sqle.getSQLState().compareTo("23000") != 0)
+								//{
+								sqle.printStackTrace();
+								log.error(sqle.getMessage());
+								log.error(sqle.getSQLState());
+								//}
+
+							} catch (Exception e) {
+								e.printStackTrace();
+
+							}
+
+							continueProcessing = false;
+						}

@@ -1,0 +1,18 @@
+{
+  "FleetId": 11,
+  "FleetName": "Interstate - VIC",
+  "VehicleId": 1,
+  "VehicleName": "L2140 Graham",
+  "VehicleExternalRef": "L2140",
+  "DriverId": 1809,
+  "DriverName": "Graham Ward",
+  "DriverExternalRef": "2140",
+  "Report": "BreakFinishedEarly",
+  "ReportId": 2,
+  "GpsData": {
+    "GpsTime": "2021-07-15T02:26:42Z",
+    "ServerTime": "2021-07-15T02:26:43Z",
+    "Latitude": -37.91435833333333,
+    "Longitude": 145.14956
+  }
+}

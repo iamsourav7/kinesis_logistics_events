@@ -1,0 +1,183 @@
+						// Process Login Report (no Job Data in this Report)
+						if (report_id.compareTo("6") == 0) {
+							log.info("Login");
+
+							String loginSql =
+									"INSERT INTO [MTDATA_KINESIS].[dbo].events_login" +
+											"(" +
+											"     report_id" +
+											"    ,fleet_id" +
+											"    ,vehicle_id" +
+											"    ,vehicle_name" +
+											"    ,vehicle_external_reference" +
+											"    ,driver_id" +
+											"    ,driver_name" +
+											"    ,driver_external_reference" +
+											"    ,gps_time" +
+											"    ,server_time" +
+											"    ,latitude" +
+											"    ,longitude" +
+											"    ,odometer" +
+											"    ,total_fuel" +
+											"    ,sequence_id" +
+											")" +
+											"VALUES" +
+											"(" +
+											"       ?" +            // report_id
+											"      ,?" +            // fleet_id
+											"      ,?" +            // vehicle_id
+											"      ,?" +            // vehicle_name
+											"      ,?" +            // vehicle_external_reference
+											"      ,?" +            // driver_id
+											"      ,?" +            // driver_name
+											"      ,?" +            // driver_external_reference
+											"      ,?" +            // gps_time
+											"      ,?" +            // server_time
+											"      ,?" +            // latitude
+											"      ,?" +            // longitude
+											"      ,?" +            // odometer
+											"      ,?" +            // total_fuel
+											"      ,?" +            // sequence_id
+											") ";
+
+							try (
+									PreparedStatement prepsInsertRecord = connection.prepareStatement(loginSql);
+							) {
+
+								prepsInsertRecord.setInt(1, tryParseInt(report_id, 0));
+								prepsInsertRecord.setInt(2, tryParseInt(fleet_id, 0));
+								prepsInsertRecord.setInt(3, tryParseInt(vehicle_id, 0));
+								prepsInsertRecord.setString(4, vehicle_name);
+								prepsInsertRecord.setString(5, vehicle_external_reference);
+								prepsInsertRecord.setInt(6, tryParseInt(driver_id, 0));
+								prepsInsertRecord.setString(7, driver_name);
+								prepsInsertRecord.setString(8, driver_external_reference);
+								prepsInsertRecord.setTimestamp(9, new Timestamp(tryParseDate(gps_time, defaultDate).getTime()));
+								prepsInsertRecord.setTimestamp(10, new Timestamp(tryParseDate(server_time, defaultDate).getTime()));
+								prepsInsertRecord.setFloat(11, Float.parseFloat(latitude));
+								prepsInsertRecord.setFloat(12, Float.parseFloat(longitude));
+								prepsInsertRecord.setInt(13, tryParseInt(odometer, 0));
+								prepsInsertRecord.setFloat(14, Float.parseFloat(total_fuel));
+								prepsInsertRecord.setBigDecimal(15, new BigDecimal(eventSequence));
+
+								prepsInsertRecord.execute();
+
+
+							}
+							// Handle any errors that may have occurred.
+							catch (SQLIntegrityConstraintViolationException sicve) {
+								// If record already exists then attempt to update it
+								// This should generally not happen but due to the way the API allows us to select
+								// based on LastUpdateDateUTC there is a lack of precision which forces our searches to potentially
+								// cross over by 1 second and therefore may pickup a
+								log.info("Upsert needed");
+							} catch (SQLServerException sqle) {
+								// Key Constraint errors ignored
+								// These are caused by records being reread from a shard that have already
+								// been committed to the database
+								//if(sqle.getSQLState().compareTo("23000") != 0)
+								//{
+								sqle.printStackTrace();
+								log.error(sqle.getMessage());
+								log.error(sqle.getSQLState());
+								//}
+
+							} catch (Exception e) {
+								e.printStackTrace();
+
+							}
+
+							continueProcessing = false;
+						}
+
+						// Process Logoff Report (no Job Data in this Report)
+						if (report_id.compareTo("7") == 0) {
+							log.info("Logoff");
+
+							String logoffSql =
+									"INSERT INTO [MTDATA_KINESIS].[dbo].events_logoff" +
+											"(" +
+											"     report_id" +
+											"    ,fleet_id" +
+											"    ,vehicle_id" +
+											"    ,vehicle_name" +
+											"    ,vehicle_external_reference" +
+											"    ,driver_id" +
+											"    ,driver_name" +
+											"    ,driver_external_reference" +
+											"    ,gps_time" +
+											"    ,server_time" +
+											"    ,latitude" +
+											"    ,longitude" +
+											"    ,odometer" +
+											"    ,total_fuel" +
+											"    ,sequence_id" +
+											")" +
+											"VALUES" +
+											"(" +
+											"       ?" +            // report_id
+											"      ,?" +            // fleet_id
+											"      ,?" +            // vehicle_id
+											"      ,?" +            // vehicle_name
+											"      ,?" +            // vehicle_external_reference
+											"      ,?" +            // driver_id
+											"      ,?" +            // driver_name
+											"      ,?" +            // driver_external_reference
+											"      ,?" +            // gps_time
+											"      ,?" +            // server_time
+											"      ,?" +            // latitude
+											"      ,?" +            // longitude
+											"      ,?" +            // odometer
+											"      ,?" +            // total_fuel
+											"      ,?" +            // sequence_id
+											") ";
+
+							try (
+									PreparedStatement prepsInsertRecord = connection.prepareStatement(logoffSql);
+							) {
+
+								prepsInsertRecord.setInt(1, tryParseInt(report_id, 0));
+								prepsInsertRecord.setInt(2, tryParseInt(fleet_id, 0));
+								prepsInsertRecord.setInt(3, tryParseInt(vehicle_id, 0));
+								prepsInsertRecord.setString(4, vehicle_name);
+								prepsInsertRecord.setString(5, vehicle_external_reference);
+								prepsInsertRecord.setInt(6, tryParseInt(driver_id, 0));
+								prepsInsertRecord.setString(7, driver_name);
+								prepsInsertRecord.setString(8, driver_external_reference);
+								prepsInsertRecord.setTimestamp(9, new Timestamp(tryParseDate(gps_time, defaultDate).getTime()));
+								prepsInsertRecord.setTimestamp(10, new Timestamp(tryParseDate(server_time, defaultDate).getTime()));
+								prepsInsertRecord.setFloat(11, Float.parseFloat(latitude));
+								prepsInsertRecord.setFloat(12, Float.parseFloat(longitude));
+								prepsInsertRecord.setInt(13, tryParseInt(odometer, 0));
+								prepsInsertRecord.setFloat(14, Float.parseFloat(total_fuel));
+								prepsInsertRecord.setBigDecimal(15, new BigDecimal(eventSequence));
+
+								prepsInsertRecord.execute();
+
+
+							}
+							// Handle any errors that may have occurred.
+							catch (SQLIntegrityConstraintViolationException sicve) {
+								// If record already exists then attempt to update it
+								// This should generally not happen but due to the way the API allows us to select
+								// based on LastUpdateDateUTC there is a lack of precision which forces our searches to potentially
+								// cross over by 1 second and therefore may pickup a
+								log.info("Upsert needed");
+							} catch (SQLServerException sqle) {
+								// Key Constraint errors ignored
+								// These are caused by records being reread from a shard that have already
+								// been committed to the database
+								//if(sqle.getSQLState().compareTo("23000") != 0)
+								//{
+								sqle.printStackTrace();
+								log.error(sqle.getMessage());
+								log.error(sqle.getSQLState());
+								//}
+
+							} catch (Exception e) {
+								e.printStackTrace();
+
+							}
+
+							continueProcessing = false;
+						}
